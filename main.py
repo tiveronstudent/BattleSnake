@@ -22,10 +22,10 @@ def info() -> typing.Dict:
 
     return {
         "apiversion": "1",
-        "author": "YaredBattlesnake",  # TODO: Your Battlesnake Username
+        "author": "YaredSnake",  # TODO: Your Battlesnake Username
         "color": "#F6A1F7",  # TODO: Choose color
-        "head": "all-seeing",  # TODO: Choose head
-        "tail": "bolt",  # TODO: Choose tail
+        "head": "fang",  # TODO: Choose head
+        "tail": "nr-booster",  # TODO: Choose tail
     }
 
 
@@ -63,14 +63,50 @@ def move(game_state: typing.Dict) -> typing.Dict:
         is_move_safe["up"] = False
 
     # TODO: Step 1 - Prevent your Battlesnake from moving out of bounds
-    # board_width = game_state['board']['width']
-    # board_height = game_state['board']['height']
+    board_width = game_state['board']['width']
+    board_height = game_state['board']['height']
+
+    if my_head["y"] == 0:
+        is_move_safe["down"] = False
+        print("Not down!")
+    elif my_head["y"] == board_height - 1:
+        is_move_safe["up"] = False
+        print("Not up!")
+    
+    if my_head["x"] == 0:
+        is_move_safe["left"] = False
+        print("Not left!")
+    elif my_head["x"] == board_width - 1:
+        is_move_safe["right"] = False
+        print("Not right!")
 
     # TODO: Step 2 - Prevent your Battlesnake from colliding with itself
-    # my_body = game_state['you']['body']
+    my_body = game_state['you']['body']
+
+    for c in my_body:
+        if c["x"] == my_head["x"] + 1 and c["y"] == my_head["y"]:
+            is_move_safe["right"] = False
+        if c["x"] == my_head["x"] - 1 and c["y"] == my_head["y"]:
+            is_move_safe["left"] = False
+        if c["x"] == my_head["x"] and c["y"] == my_head["y"] + 1:
+            is_move_safe["up"] = False
+        if c["x"] == my_head["x"] and c["y"] == my_head["y"] - 1:
+            is_move_safe["down"] = False
+
 
     # TODO: Step 3 - Prevent your Battlesnake from colliding with other Battlesnakes
-    # opponents = game_state['board']['snakes']
+    opponents = game_state['board']['snakes']
+
+    for snake in opponents:
+        for c in snake['body']:
+            if c["x"] == my_head["x"] + 1 and c["y"] == my_head["y"]:
+                is_move_safe["right"] = False
+            if c["x"] == my_head["x"] - 1 and c["y"] == my_head["y"]:
+                is_move_safe["left"] = False
+            if c["x"] == my_head["x"] and c["y"] == my_head["y"] + 1:
+                is_move_safe["up"] = False
+            if c["x"] == my_head["x"] and c["y"] == my_head["y"] - 1:
+                is_move_safe["down"] = False
 
     # Are there any safe moves left?
     safe_moves = []
@@ -86,7 +122,29 @@ def move(game_state: typing.Dict) -> typing.Dict:
     next_move = random.choice(safe_moves)
 
     # TODO: Step 4 - Move towards food instead of random, to regain health and survive longer
-    # food = game_state['board']['food']
+    food = game_state['board']['food']
+    right = False
+    left = False
+    up = False
+    down = False
+    for d in safe_moves:
+        if d == "up":
+            up = True
+        if d == "right":
+            right = True
+        if d == "left":
+            left = True
+        if d == "down":
+            down = True
+    
+    if food[0]["x"] > my_head["x"] and right:
+        next_move = "right"
+    elif food[0]["y"] > my_head["y"] and up:
+        next_move = "up"
+    elif food[0]["x"] < my_head["x"] and left:
+        next_move = "left"
+    elif food[0]["y"] < my_head["y"] and down:
+        next_move = "down"
 
     print(f"MOVE {game_state['turn']}: {next_move}")
     return {"move": next_move}
