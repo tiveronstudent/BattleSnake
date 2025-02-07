@@ -13,6 +13,7 @@
 import random
 import typing
 
+game_end = False
 
 # info is called when you create your Battlesnake on play.battlesnake.com
 # and controls your Battlesnake's appearance
@@ -31,13 +32,17 @@ def info() -> typing.Dict:
 
 # start is called when your Battlesnake begins a game
 def start(game_state: typing.Dict):
+    game_end = False
     print("GAME START")
 
 
 # end is called when your Battlesnake finishes a game
 def end(game_state: typing.Dict):
+    game_end = True
     print("GAME OVER\n")
 
+def game_ended(game_state: typing.Dict):
+    return game_end
 
 # move is called on every turn and returns your next move
 # Valid moves are "up", "down", "left", or "right"
@@ -147,23 +152,12 @@ def move(game_state: typing.Dict) -> typing.Dict:
         next_move = "down"
     
     # TODO: Step 5 - Look ahead a move to make sure that you are not going to trap yourself
-    temp_game = game_state
-    temp_game["you"].move(temp_game)
+    """temp_game = game_state
+    # run_server(temp_game)
 
-    
-
-
-    """next_head = my_head
-    if next_move == "up":
-        next_head = {"x":my_head["x"], "y":(my_head["y"] + 1)}
-    elif next_move == "down":
-        next_head = {"x":my_head["x"], "y":(my_head["y"] - 1)}
-    elif next_move == "left":
-        next_head = {"x":my_head["x"] - 1, "y":(my_head["y"])}
-    elif next_move == "right":
-        next_head = {"x":my_head["x"] + 1, "y":(my_head["y"])}"""
-    
-
+    for m in next_move:
+        if not temp_game["you"].game_ended():
+            break"""
 
     print(f"MOVE {game_state['turn']}: {next_move}")
     return {"move": next_move}
