@@ -142,22 +142,26 @@ def move(game_state: typing.Dict) -> typing.Dict:
         if d == "down":
             down = True
     
-    if food[0]["x"] > my_head["x"] and right:
-        next_move = "right"
-    elif food[0]["y"] > my_head["y"] and up:
-        next_move = "up"
-    elif food[0]["x"] < my_head["x"] and left:
-        next_move = "left"
-    elif food[0]["y"] < my_head["y"] and down:
-        next_move = "down"
+    if(game_state["you"]["health"] < 15):
+        if food[0]["x"] > my_head["x"] and right:
+            next_move = "right"
+        elif food[0]["y"] > my_head["y"] and up:
+            next_move = "up"
+        elif food[0]["x"] < my_head["x"] and left:
+            next_move = "left"
+        elif food[0]["y"] < my_head["y"] and down:
+            next_move = "down"
     
     # TODO: Step 5 - Look ahead a move to make sure that you are not going to trap yourself
-    """temp_game = game_state
-    # run_server(temp_game)
+    grid = [[0 for _ in range(board_width)] for _ in range(board_height)]
 
-    for m in next_move:
-        if not temp_game["you"].game_ended():
-            break"""
+    for snake in opponents:
+        for c in snake['body']:
+            grid[c["y"]][c["y"]] = 1
+
+    if right and left and not up and not down:
+        pass
+
 
     print(f"MOVE {game_state['turn']}: {next_move}")
     return {"move": next_move}
