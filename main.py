@@ -122,6 +122,27 @@ def move(game_state: typing.Dict) -> typing.Dict:
     if len(safe_moves) == 0:
         print(f"MOVE {game_state['turn']}: No safe moves detected! Moving down")
         return {"move": "down"}
+
+    grid = [[0 for _ in range(board_width)] for _ in range(board_height)]
+
+    
+    spot = {"x" : my_head["x"], "y" : my_head["y"]}
+
+    if len(safe_moves) > 1:
+        for i in range(len(safe_moves)):
+            if safe_moves[i] == "up":
+                spot["y"] += 1
+            elif safe_moves[i] == "down":
+                spot["y"] -= 1
+            elif safe_moves[i] == "left":
+                spot["x"] -= 1
+            elif safe_moves[i] == "right":
+                spot["x"] += 1
+
+            x = spot["x"]
+            y = spot["y"]
+            if grid[x][y+1] == 1 and grid[x][y-1] == 1 and grid[x+1][y] == 1 and grid[x-1][y] == 1:
+                safe_moves.remove(safe_moves[i])
     
     # Choose a random move from the safe ones
     next_move = random.choice(safe_moves)
@@ -142,25 +163,46 @@ def move(game_state: typing.Dict) -> typing.Dict:
         if d == "down":
             down = True
     
-    if(game_state["you"]["health"] < 15):
-        if food[0]["x"] > my_head["x"] and right:
-            next_move = "right"
-        elif food[0]["y"] > my_head["y"] and up:
-            next_move = "up"
-        elif food[0]["x"] < my_head["x"] and left:
-            next_move = "left"
-        elif food[0]["y"] < my_head["y"] and down:
-            next_move = "down"
+    closest_food = food[0]
+    c = 100
+    for i in range(len(food)):
+        n = abs(food[i]["x"] - my_head["x"]) + abs(food[i]["y"] - my_head["y"])
+        if n < c:
+            c = n
+            closest_food = food[i]
+    food_spot = None
+    if closest_food["x"] > my_head["x"] and right:
+        food_spot = "right"
+    elif closest_food["y"] > my_head["y"] and up:
+        food_spot = "up"
+    elif closest_food["x"] < my_head["x"] and left:
+        food_spot = "left"
+    elif closest_food["y"] < my_head["y"] and down:
+        food_spot = "down"
     
-    # TODO: Step 5 - Look ahead a move to make sure that you are not going to trap yourself
-    grid = [[0 for _ in range(board_width)] for _ in range(board_height)]
+    # TODO: Step 5 - Try to survive as long as possible
 
     for snake in opponents:
         for c in snake['body']:
             grid[c["y"]][c["y"]] = 1
 
-    if right and left and not up and not down:
-        pass
+    my_tail = game_state['you']['body'][-1]
+    direction = None
+    if len(game_state["board"]["snakes"]) == 1 and game_state["you"]["health"] > 15:
+        if my_tail["x"] > my_head["x"] and "right" in safe_moves:
+            direction = "right"
+        elif my_tail["y"] > my_head["y"] and "up" in safe_moves:
+            direction = "up"
+        elif my_tail["x"] < my_head["x"] and "left" in safe_moves:
+            direction = "left"
+        elif my_tail["y"] < my_head["y"] and down in safe_moves:
+            direction = "down"
+    if direction != None:
+        next_move = direction
+    else:
+        next_move = food_spot
+
+    
 
 
     print(f"MOVE {game_state['turn']}: {next_move}")
