@@ -119,15 +119,14 @@ def move(game_state: typing.Dict) -> typing.Dict:
         if isSafe:
             safe_moves.append(move)
 
-    if len(safe_moves) == 0:
-        print(f"MOVE {game_state['turn']}: No safe moves detected! Moving down")
-        return {"move": "down"}
-
     grid = [[0 for _ in range(board_width)] for _ in range(board_height)]
-
+    my_tail = game_state['you']['body'][-1]
+    for snake in opponents:
+        for c in snake['body']:
+            grid[c["x"]][c["y"]] = 1
     
     spot = {"x" : my_head["x"], "y" : my_head["y"]}
-
+    """
     if len(safe_moves) > 1:
         for i in range(len(safe_moves)):
             if safe_moves[i] == "up":
@@ -141,9 +140,41 @@ def move(game_state: typing.Dict) -> typing.Dict:
 
             x = spot["x"]
             y = spot["y"]
-            if grid[x][y+1] == 1 and grid[x][y-1] == 1 and grid[x+1][y] == 1 and grid[x-1][y] == 1:
-                safe_moves.remove(safe_moves[i])
-    
+            if y > 0 and x > 0 and y < board_height - 1 and x < board_width - 1:
+                if grid[x][y+1] == 1 and grid[x][y-1] == 1 and grid[x+1][y] == 1 and grid[x-1][y] == 1:
+                    safe_moves.remove(safe_moves[i])
+            elif not y > 0 and x > 0 and y < board_height - 1 and x < board_width - 1:
+                if grid[x][y+1] == 1 and grid[x+1][y] == 1 and grid[x-1][y] == 1:
+                    safe_moves.remove(safe_moves[i])
+            elif not x > 0 and y > 0 and y < board_height - 1 and x < board_width - 1:
+                if grid[x][y+1] == 1 and grid[x][y-1] == 1 and grid[x+1][y] == 1:
+                    safe_moves.remove(safe_moves[i])
+            elif x > 0 and y > 0 and not y < board_height - 1 and x < board_width - 1:
+                if grid[x-1][y] == 1 and grid[x][y-1] == 1 and grid[x+1][y] == 1:
+                    safe_moves.remove(safe_moves[i])
+            elif y > 0 and x > 0 and y < board_height - 1 and not x < board_width - 1:
+                if grid[x][y+1] == 1 and grid[x][y-1] == 1 and grid[x-1][y] == 1:
+                    safe_moves.remove(safe_moves[i])
+            elif not y > 0 and not x > 0 and y < board_height - 1 and x < board_width - 1:
+                if grid[x][y+1] == 1 and grid[x+1][y] == 1:
+                    safe_moves.remove(safe_moves[i])
+            elif y > 0 and not x > 0 and not y < board_height - 1 and x < board_width - 1:
+                if grid[x][x+1] == 1 and grid[x][y-1] == 1:
+                    safe_moves.remove(safe_moves[i])
+            elif y > 0 and x > 0 and not y < board_height - 1 and not x < board_width - 1:
+                if grid[x][y-1] == 1 and grid[x-1][y] == 1:
+                    safe_moves.remove(safe_moves[i])
+            elif not y > 0 and x > 0 and y < board_height - 1 and not x < board_width - 1:
+                if grid[x][y+1] == 1 and grid[x-1][y] == 1:
+                    safe_moves.remove(safe_moves[i])
+    """
+    if len(safe_moves) == 0:
+        print(f"MOVE {game_state['turn']}: No safe moves detected! Moving down")
+        return {"move": "down"}
+    if len(safe_moves) == 1:
+        print(f"MOVE {game_state['turn']}: {safe_moves[0]}")
+        return {"move": safe_moves[0]}
+
     # Choose a random move from the safe ones
     next_move = random.choice(safe_moves)
 
@@ -182,20 +213,17 @@ def move(game_state: typing.Dict) -> typing.Dict:
     
     # TODO: Step 5 - Try to survive as long as possible
 
-    for snake in opponents:
-        for c in snake['body']:
-            grid[c["y"]][c["y"]] = 1
+    
 
-    my_tail = game_state['you']['body'][-1]
     direction = None
-    if len(game_state["board"]["snakes"]) == 1 and game_state["you"]["health"] > 15:
+    if len(game_state["board"]["snakes"]) == 1 and game_state["you"]["health"] > 6:
         if my_tail["x"] > my_head["x"] and "right" in safe_moves:
             direction = "right"
         elif my_tail["y"] > my_head["y"] and "up" in safe_moves:
             direction = "up"
         elif my_tail["x"] < my_head["x"] and "left" in safe_moves:
             direction = "left"
-        elif my_tail["y"] < my_head["y"] and down in safe_moves:
+        elif my_tail["y"] < my_head["y"] and "down" in safe_moves:
             direction = "down"
     if direction != None:
         next_move = direction
