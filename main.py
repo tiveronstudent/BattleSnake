@@ -63,7 +63,10 @@ def move(game_state: typing.Dict) -> typing.Dict:
     my_tail = game_state['you']['body'][-1]
     for snake in opponents:
         for c in snake['body']:
-            grid[c["x"]][c["y"]] = 1
+            grid[c["x"]][c["y"]] += 4
+    for snake in opponents:
+        tail = snake["body"][-1]
+        grid[tail["x"]][tail["y"]] -= 3
     
     if my_head["y"] == 0:
         is_move_safe["down"] = False
@@ -78,13 +81,13 @@ def move(game_state: typing.Dict) -> typing.Dict:
         is_move_safe["right"] = False
         print("Not right!")
     
-    if my_head["x"] != 0 and grid[my_head["x"] - 1][my_head["y"]] == 1:
+    if my_head["x"] != 0 and grid[my_head["x"] - 1][my_head["y"]] >= 1:
         is_move_safe["left"] = False
-    if my_head["x"] != board_width - 1 and grid[my_head["x"] + 1][my_head["y"]] == 1:
+    if my_head["x"] != board_width - 1 and grid[my_head["x"] + 1][my_head["y"]] >= 1:
         is_move_safe["right"] = False
-    if my_head["y"] != 0 and grid[my_head["x"]][my_head["y"] - 1] == 1:
+    if my_head["y"] != 0 and grid[my_head["x"]][my_head["y"] - 1] >= 1:
         is_move_safe["down"] = False
-    if my_head["y"] != board_height - 1 and grid[my_head["x"]][my_head["y"] + 1] == 1:
+    if my_head["y"] != board_height - 1 and grid[my_head["x"]][my_head["y"] + 1] >= 1:
         is_move_safe["up"] = False
     
     safe_moves = []
@@ -97,24 +100,24 @@ def move(game_state: typing.Dict) -> typing.Dict:
         for snake in opponents:
             other_head = snake["body"][0]
             if other_head != my_head and snake["length"] >= game_state["you"]["length"]:
-                if "right" in safe_moves:
-                    grid[other_head["x"] + 1][other_head["y"]] = 1
+                if other_head["x"] != board_width - 1:
+                    grid[other_head["x"] + 1][other_head["y"]] += 1
                 if other_head["x"] != 0:
-                    grid[other_head["x"] - 1][other_head["y"]] = 1
+                    grid[other_head["x"] - 1][other_head["y"]] += 1
                 if other_head["y"] != board_height - 1:
-                    grid[other_head["x"]][other_head["y"] + 1] = 1
+                    grid[other_head["x"]][other_head["y"] + 1] += 1
                 if other_head["y"] != 0:
-                    grid[other_head["x"]][other_head["y"] - 1] = 1
-    if my_head["x"] != 0 and grid[my_head["x"] - 1][my_head["y"]] == 1:
+                    grid[other_head["x"]][other_head["y"] - 1] += 1
+    if my_head["x"] != 0 and grid[my_head["x"] - 1][my_head["y"]] >= 1:
         is_move_safe["left"] = False
         print("no more left!")
-    if my_head["x"] != board_width - 1 and grid[my_head["x"] + 1][my_head["y"]] == 1:
+    if my_head["x"] != board_width - 1 and grid[my_head["x"] + 1][my_head["y"]] >= 1:
         is_move_safe["right"] = False
         print("no more right!")
-    if my_head["y"] != 0 and grid[my_head["x"]][my_head["y"] - 1] == 1:
+    if my_head["y"] != 0 and grid[my_head["x"]][my_head["y"] - 1] >= 1:
         is_move_safe["down"] = False
         print("no more down!")
-    if my_head["y"] != board_height - 1 and grid[my_head["x"]][my_head["y"] + 1] == 1:
+    if my_head["y"] != board_height - 1 and grid[my_head["x"]][my_head["y"] + 1] >= 1:
         is_move_safe["up"] = False
         print("no more up!")
     
@@ -123,9 +126,29 @@ def move(game_state: typing.Dict) -> typing.Dict:
         if isSafe:
             safe_moves2.append(move)
     
+    least_risky = ""
+    if len(safe_moves2) == 0:
+        print("choosing least risky move")
+        spot = {"x" : my_head["x"], "y" : my_head["y"]}
+        min = 5
+        for move in safe_moves:
+            if move == "right":
+                spot["x"] += 1
+            elif move == "left":
+                spot["x"] -= 1
+            elif move == "up":
+                spot["y"] += 1
+            elif move == "down":
+                spot["y"] -= 1
+            if grid[spot["x"]][spot["y"]] < min:
+                min = grid[spot["x"]][spot["y"]]
+                least_risky = move
+            else:
+                pass #check if it is equal risk, then pick spot with food because it is more worth it
+        safe_moves2.append(least_risky)
     if len(safe_moves2) > 0:
         print("switched safe_moves!")
-        safe_moves = safe_moves2
+        safe_moves = safe_moves2  
 
     # RETURNS A MOVE IF ONLY ONE MOVE OR NO MOVES ARE AVAILABLE
     if len(safe_moves) == 0:
@@ -134,6 +157,7 @@ def move(game_state: typing.Dict) -> typing.Dict:
     if len(safe_moves) == 1:
         print(f"MOVE {game_state['turn']}: {safe_moves[0]}")
         return {"move": safe_moves[0]}
+
 
 
 
@@ -173,11 +197,22 @@ def move(game_state: typing.Dict) -> typing.Dict:
             direction = "left"
         elif my_tail["y"] < my_head["y"] and "down" in safe_moves:
             direction = "down"
+        else:
+            if (my_tail["x"] > my_head["x"] or my_tail["x"] < my_head["x"]) and "up" in safe_moves:
+                direction = "up"
+            elif (my_tail["x"] > my_head["x"] or my_tail["x"] < my_head["x"]) and "down" in safe_moves:
+                direction = "down"
+            if (my_tail["y"] > my_head["y"] or my_tail["y"] < my_head["y"]) and "right" in safe_moves:
+                direction = "right"
+            elif (my_tail["y"] > my_head["y"] or my_tail["y"] < my_head["y"]) and "right" in safe_moves:
+                direction = "down"
     if direction != None:
         next_move = direction
     else:
         next_move = food_spot
 
+    if next_move == None:
+        next_move = random.choice(safe_moves)
 
     # RETURNS THE MOVE CHOSEN
     print(f"MOVE {game_state['turn']}: {next_move}")
